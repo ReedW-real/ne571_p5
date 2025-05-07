@@ -29,20 +29,20 @@ print('Script run time for 30 nodes is 213.86379265785217 s')
 print('Script run time for 36 nodes is 771.1584618091583 s')
 
 # Define region sizes (cm)
-wx1 = 49.7 # Width of region 1 (core) x direction (cm)
-wy1 = 49.7  # Width of region 1 y direction (cm)
-wz1 = 49.7  # Width of region 1 z direction (cm)
+wx1 = 83 # Width of region 1 (core) x direction (cm)
+wy1 = 83  # Width of region 1 y direction (cm)
+wz1 = 83  # Width of region 1 z direction (cm)
 wx2 = 2    # Width of region 2 (reflector) x direction (cm)
 wy2 = 2    # Width of region 2 y direction (cm)
 wz2 = 2    # Width of region 2 z direction (cm)
 
 # Define number of nodes in each region
-nx1 = 8  # Nodes in First Region x direction (core)
-ny1 = 8  # Nodes in First Region y direction (core)
-nz1 = 8  # Nodes in First Region z direction (core)
-nx2 = 2  # Nodes in Second Region x direction (reflector)
-ny2 = 2  # Nodes in Second Region y direction (reflector)
-nz2 = 2  # Nodes in Second Region z direction (reflector)
+nx1 = 11  # Nodes in First Region x direction (core)
+ny1 = 11  # Nodes in First Region y direction (core)
+nz1 = 11  # Nodes in First Region z direction (core)
+nx2 = 3  # Nodes in Second Region x direction (reflector)
+ny2 = 3  # Nodes in Second Region y direction (reflector)
+nz2 = 3  # Nodes in Second Region z direction (reflector)
 
 # Calculate total width of all regions
 print('Total width of all regions x direction:', wx1 + wx2, 'cm')
@@ -66,39 +66,64 @@ print('Node', nz1, '@', wz1, 'cm')
 print('Node', nz1 + nz2, '@', wz1 + wz2, 'cm')
 
 #%% Defining Variables
-# Core material properties
-nusigmaf1 = 0.008476
-nusigmaf2 = 0.0
-nusigmafth1 = 0.18514
-nusigmafth2 = 0.0  # nu*sigmaf for flux 2 thermal
-Df1 = 1.2627  # Diffusion coefficient for fast flux
-Df2 = 1.13
-Dth1 = 0.3543
-Dth2 = 0.16
-SigmaRf1 = 0.02619
-SigmaRf2 = 0.0494  # Removal cross section for fast flux
-SigmaAf1 = 0.01207
-SigmaAf2 = 0.0004  # Absorption Coefficient of fast flux
-SigmaAth1 = 0.1210
-SigmaAth2 = 0.0197  # Absorption coefficient of thermal flux
-SigmaS12c = SigmaRf1 - SigmaAf1
-SigmaS12r = SigmaRf2
+# Core material 1 =
+nusigmaf_mat1 = 0.00850845
+nusigmafth_mat1 = 0.183356
+Df_mat1 = 1.41940  # Diffusion coefficient for fast flux
+Dth_mat1 = 0.372102
+SigmaRf_mat1 = 0.02619
+SigmaAf_mat1 = 0.0104550
+SigmaAth_mat1 = 0.102669
+SigmaS12_mat1 = SigmaRf_mat1 - SigmaAf_mat1
+
+# Core material 2 =
+nusigmaf_mat2 = 0.0082127
+nusigmafth_mat2 = 0.17925
+Df_mat2 = 1.4415  # Diffusion coefficient for fast flux
+Dth_mat2 = 0.37470
+SigmaRf_mat2 = 0.014980
+SigmaAf_mat2 = 0.010064
+SigmaAth_mat2 = 0.10049
+SigmaS12_mat2 = SigmaRf_mat2 - SigmaAf_mat2
+
+# Core material 3 =
+nusigmaf_mat3 = 0.0069706
+nusigmafth_mat3 = 0.14457
+Df_mat3 = 1.4362  # Diffusion coefficient for fast flux
+Dth_mat3 = 0.37525
+SigmaRf_mat3 = 0.015612
+SigmaAf_mat3 = 0.0094409
+SigmaAth_mat3 = 0.084275
+SigmaS12_mat3 = SigmaRf_mat3 - SigmaAf_mat3
+
+
+#Reflector material properties
+nusigmaf_ref = 0.0
+nusigmafth_ref = 0.0  # nu*sigmaf for flux 2 thermal
+Df_ref = 1.33810
+Dth_ref = 0.308530
+SigmaRf_ref = 0.0494  # Removal cross section for fast flux
+SigmaAf_ref = 0.00166887  # Absorption Coefficient of fast flux
+SigmaAth_ref = 0.0325711  # Absorption coefficient of thermal flux
+SigmaS12_ref = SigmaRf_ref
 
 Sigmaff=0.003320
 Sigmafth=0.07537
 
 # Core material grid
-core_mat_file = np.genfromtxt('bwr.example.csv',delimiter=',',skip_header =13, skip_footer =24)
-core_mat=core_mat_file[:,1:9]
-nan_mask = np.isnan(core_mat)
-core_mat[nan_mask] = core_mat.T[nan_mask]
-core_3d = np.repeat(core_mat[:, :, np.newaxis], nz1, axis=2)
+# core_mat_file = np.genfromtxt('bwr.example.csv',delimiter=',',skip_header =13, skip_footer =24)
+# core_mat=core_mat_file[:,1:9]
+# nan_mask = np.isnan(core_mat)
+# core_mat[nan_mask] = core_mat.T[nan_mask]
+# core_3d = np.repeat(core_mat[:, :, np.newaxis], nz1, axis=2)
 
-core_and_ref = np.pad(core_3d, pad_width=nz2, mode='constant', constant_values=8)
+# core_and_ref = np.pad(core_3d, pad_width=nz2, mode='constant', constant_values=8)
 
-#0 =  
-#1 = fuel
-# 
+# Core material grid
+core_mat_file = np.genfromtxt('core_design1.csv',delimiter=',')
+core_mat_file[0,0]=1
+core_3d = np.repeat(core_mat_file[:,:,np.newaxis],nz1,axis=2)
+core_and_ref = np.pad(core_3d, pad_width=nz2, mode='constant', constant_values=5)
 
 # Reactor power and energy per fission
 P = 3000  # Power in MWth
@@ -131,12 +156,12 @@ else:
 # with the D_core * L_reflector / D_reflector per Weston Stacey's
 # Nuclear Reactor Physics 
 # L^2 = D/sigma_abs per Weston Stacy
-L_thr = np.sqrt(Dth2 / SigmaAth2);
-L_fr    = np.sqrt(Df2 / SigmaAf2);
+L_thr = np.sqrt(Dth_ref / SigmaAth_ref);
+L_fr    = np.sqrt(Df_ref / SigmaAf_ref);
 
-reflector_savings = (Dth1) * (L_thr) / (Dth2)
+reflector_savings = (Dth_mat1) * (L_thr) / (Dth_ref)
 
-reflector_savings_both = (Dth1 + Df1) * (L_thr + L_fr) / (Dth2 + Df2)
+reflector_savings_both = (Dth_mat1 + Df_mat1) * (L_thr + L_fr) / (Dth_ref + Df_ref)
 print(reflector_savings_both)
 print(reflector_savings)
     
@@ -151,26 +176,56 @@ south_f=[]
 up_f=[]
 down_f=[]
 
-#Fast Core
+#Fast Core material 1
 
-central_equ_fc=2*Df1/(distx1**2) + 2*Df1/(disty1**2) + 2*Df1/(distz1**2) + SigmaRf1
-east_equ_fc=-Df1/(distx1**2)
-west_equ_fc=-Df1/(distx1**2)
-north_equ_fc=-Df1/(disty1**2)
-south_equ_fc=-Df1/(disty1**2)
-up_equ_fc=-Df1/(distz1**2)
-down_equ_fc=-Df1/(distz1**2)
+central_equ_fast_mat1=2*Df_mat1/(distx1**2) + 2*Df_mat1/(disty1**2) + 2*Df_mat1/(distz1**2) + SigmaRf_mat1
+east_equ_fast_mat1=-Df_mat1/(distx1**2)
+west_equ_fast_mat1=-Df_mat1/(distx1**2)
+north_equ_fast_mat1=-Df_mat1/(disty1**2)
+south_equ_fast_mat1=-Df_mat1/(disty1**2)
+up_equ_fast_mat1=-Df_mat1/(distz1**2)
+down_equ_fast_mat1=-Df_mat1/(distz1**2)
+
+#Fast Core material 2
+
+central_equ_fast_mat2=2*Df_mat2/(distx1**2) + 2*Df_mat2/(disty1**2) + 2*Df_mat2/(distz1**2) + SigmaRf_mat2
+east_equ_fast_mat2=-Df_mat2/(distx1**2)
+west_equ_fast_mat2=-Df_mat2/(distx1**2)
+north_equ_fast_mat2=-Df_mat2/(disty1**2)
+south_equ_fast_mat2=-Df_mat2/(disty1**2)
+up_equ_fast_mat2=-Df_mat2/(distz1**2)
+down_equ_fast_mat2=-Df_mat2/(distz1**2)
+
+#Fast Core material 3
+
+central_equ_fast_mat3=2*Df_mat3/(distx1**2) + 2*Df_mat3/(disty1**2) + 2*Df_mat3/(distz1**2) + SigmaRf_mat3
+east_equ_fast_mat3=-Df_mat3/(distx1**2)
+west_equ_fast_mat3=-Df_mat3/(distx1**2)
+north_equ_fast_mat3=-Df_mat3/(disty1**2)
+south_equ_fast_mat3=-Df_mat3/(disty1**2)
+up_equ_fast_mat3=-Df_mat3/(distz1**2)
+down_equ_fast_mat3=-Df_mat3/(distz1**2)
+
+#Fast Core material 4
+
+# central_equ_fast_mat4=2*Df_mat4/(distx1**2) + 2*Df_mat4/(disty1**2) + 2*Df_mat4/(distz1**2) + SigmaRf_mat4
+# east_equ_fast_mat4=-Df_mat4/(distx1**2)
+# west_equ_fast_mat4=-Df_mat4/(distx1**2)
+# north_equ_fast_mat4=-Df_mat4/(disty1**2)
+# south_equ_fast_mat4=-Df_mat4/(disty1**2)
+# up_equ_fast_mat4=-Df_mat4/(distz1**2)
+# down_equ_fast_mat4=-Df_mat4/(distz1**2)
 
 # Reflector Fast
 
 if nx2 > 0 and ny2 > 0 and nz2 > 0:  # Check if the reflector region exists
-    central_equ_fr=2*Df2/(distx2**2) + 2*Df2/(disty2**2) + 2*Df2/(distz2**2) + SigmaRf2
-    east_equ_fr=-Df2/(distx2**2)
-    west_equ_fr=-Df2/(distx2**2)
-    north_equ_fr=-Df2/(disty2**2)
-    south_equ_fr=-Df2/(disty2**2)
-    up_equ_fr=-Df2/(distz2**2)
-    down_equ_fr=-Df2/(distz2**2)
+    central_equ_f_ref=2*Df_ref/(distx2**2) + 2*Df_ref/(disty2**2) + 2*Df_ref/(distz2**2) + SigmaRf_ref
+    east_equ_f_ref=-Df_ref/(distx2**2)
+    west_equ_f_ref=-Df_ref/(distx2**2)
+    north_equ_f_ref=-Df_ref/(disty2**2)
+    south_equ_f_ref=-Df_ref/(disty2**2)
+    up_equ_f_ref=-Df_ref/(distz2**2)
+    down_equ_f_ref=-Df_ref/(distz2**2)
 else:
     central_equ_fr= None   
     east_equ_fr= None   
@@ -189,60 +244,102 @@ for k in range(nz1 + 2 * nz2):
     for j in range(ny1 + 2 * ny2):
         for i in range(nx1 + 2 * nx2):
             if core_and_ref[i, j, k] == 1:
-                central_f = np.append(central_f, central_equ_fc)
+                central_f = np.append(central_f, central_equ_fast_mat1)
             elif core_and_ref[i, j, k] == 2:
-                central_f = np.append(central_f, central_equ_fr)
+                central_f = np.append(central_f, central_equ_fast_mat2)
+            elif core_and_ref[i, j, k] == 3:
+                central_f = np.append(central_f, central_equ_fast_mat3)
+#            elif core_and_ref[i, j, k] == 4:
+#                central_f = np.append(central_f, central_equ_fast_mat4)                
+            elif core_and_ref[i, j, k] == 5:
+                central_f = np.append(central_f, central_equ_f_ref)
             
             if i == nx1 + 2 * nx2 - 1:  # End node in the x-direction
                 east_f = np.append(east_f, 0)
             else:
                 if i < nx1 + 2 * nx2 - 1:  # End node in the x-direction
                     if core_and_ref[i+1, j, k] == 1:
-                        east_f = np.append(east_f, east_equ_fc)
+                        east_f = np.append(east_f, east_equ_fast_mat1)
                     elif core_and_ref[i+1, j, k] == 2:
-                        east_f = np.append(east_f, east_equ_fr)
+                        east_f = np.append(east_f, east_equ_fast_mat2)
+                    elif core_and_ref[i+1, j, k] == 3:
+                        east_f = np.append(east_f, east_equ_fast_mat3)
+#                    elif core_and_ref[i+1, j, k] == 4:
+#                        east_f = np.append(east_f, east_equ_fast_mat4)                        
+                    elif core_and_ref[i+1, j, k] == 5:
+                        east_f = np.append(east_f, east_equ_f_ref)
             
             if i == 0:  # Start node in the x-direction
                 west_f = np.append(west_f, 0)
             else:
                 if core_and_ref[i-1, j, k] == 1:
-                    west_f = np.append(west_f, west_equ_fc)
+                    west_f = np.append(west_f, west_equ_fast_mat1)
                 elif core_and_ref[i-1, j, k] == 2:
-                    west_f = np.append(west_f, west_equ_fr)
+                    west_f = np.append(west_f, west_equ_fast_mat2)  
+                elif core_and_ref[i-1, j, k] == 3:
+                    west_f = np.append(west_f, west_equ_fast_mat3) 
+#                elif core_and_ref[i-1, j, k] == 4:
+#                    west_f = np.append(west_f, west_equ_fast_mat4) 
+                elif core_and_ref[i-1, j, k] == 5:
+                    west_f = np.append(west_f, west_equ_f_ref)
             
             if j == ny1 + 2 * ny2 - 1:  # End node in the y-direction
                 north_f = np.append(north_f, 0)
             else:
                 if j < nx1 + 2 * nx2 - 1:  # Ensure i+1 is within bounds
                     if core_and_ref[i,j+1,k] == 1:
-                        north_f=np.append(north_f,north_equ_fc)
+                        north_f=np.append(north_f,north_equ_fast_mat1)
                     elif core_and_ref[i,j+1,k] == 2:
-                        north_f=np.append(north_f,north_equ_fr)
+                        north_f=np.append(north_f,north_equ_fast_mat2)
+                    elif core_and_ref[i,j+1,k] == 3:
+                        north_f=np.append(north_f,north_equ_fast_mat3)
+#                    elif core_and_ref[i,j+1,k] == 4:
+#                        north_f=np.append(north_f,north_equ_fast_mat4)                        
+                    elif core_and_ref[i,j+1,k] == 5:
+                        north_f=np.append(north_f,north_equ_f_ref)
             
             if j == 0:  # Start node in the y-direction
                 south_f = np.append(south_f, 0)
             else:
                 if core_and_ref[i, j-1, k] == 1:
-                    south_f = np.append(south_f, south_equ_fc)
+                    south_f = np.append(south_f, south_equ_fast_mat1)
                 elif core_and_ref[i, j-1, k] == 2:
-                    south_f = np.append(south_f, south_equ_fr)
+                    south_f = np.append(south_f, south_equ_fast_mat2)
+                elif core_and_ref[i, j-1, k] == 3:
+                    south_f = np.append(south_f, south_equ_fast_mat3)
+#                elif core_and_ref[i, j-1, k] == 4:
+#                    south_f = np.append(south_f, south_equ_fast_mat4)
+                elif core_and_ref[i, j-1, k] == 5:
+                    south_f = np.append(south_f, south_equ_f_ref)
             
             if k == nz1 + 2 * nz2 - 1:  # End node in the z-direction
                 up_f = np.append(up_f, 0)
             else:
                 if k < nx1 + 2 * nx2 - 1:  # Ensure i+1 is within bounds
                     if core_and_ref[i,j,k+1] == 1:
-                        up_f=np.append(up_f,up_equ_fc)
+                        up_f=np.append(up_f,up_equ_fast_mat1)
                     elif core_and_ref[i,j,k+1] == 2:
-                        up_f=np.append(up_f,up_equ_fr)
+                        up_f=np.append(up_f,up_equ_fast_mat2)
+                    elif core_and_ref[i,j,k+1] == 3:
+                        up_f=np.append(up_f,up_equ_fast_mat3)
+#                    elif core_and_ref[i,j,k+1] == 4:
+#                        up_f=np.append(up_f,up_equ_fast_mat4)
+                    elif core_and_ref[i,j,k+1] == 5:
+                        up_f=np.append(up_f,up_equ_f_ref)
             
             if k == 0:  # Start node in the z-direction
                 down_f = np.append(down_f, 0)
             else:
                 if core_and_ref[i, j, k-1] == 1:
-                    down_f = np.append(down_f, down_equ_fc)
+                    down_f = np.append(down_f, down_equ_fast_mat1)
                 elif core_and_ref[i, j, k-1] == 2:
-                    down_f = np.append(down_f, down_equ_fr)
+                    down_f = np.append(down_f, down_equ_fast_mat2) 
+                elif core_and_ref[i, j, k-1] == 3:
+                    down_f = np.append(down_f, down_equ_fast_mat3)
+#                elif core_and_ref[i, j, k-1] == 4:
+#                    down_f = np.append(down_f, down_equ_fast_mat4)                    
+                elif core_and_ref[i, j, k-1] == 5:
+                    down_f = np.append(down_f, down_equ_f_ref)
                 
 
 #%% Make Fast Flux Arrays               
@@ -271,87 +368,161 @@ south_thc=[]
 up_thc=[]
 down_thc=[]
 
-central_equ_thc=2*Dth1/(distx1**2) + 2*Dth1/(disty1**2) + 2*Dth1/(distz1**2) + SigmaAth1
-east_equ_thc=-Dth1/(distx1**2)
-west_equ_thc=-Dth1/(distx1**2)
-north_equ_thc=-Dth1/(disty1**2)
-south_equ_thc=-Dth1/(disty1**2)
-up_equ_thc=-Dth1/(distz1**2)
-down_equ_thc=-Dth1/(distz1**2)
+#Thermal core material 1
+
+central_equ_th_mat1=2*Dth_mat1/(distx1**2) + 2*Dth_mat1/(disty1**2) + 2*Dth_mat1/(distz1**2) + SigmaAth_mat1
+east_equ_th_mat1=-Dth_mat1/(distx1**2)
+west_equ_th_mat1=-Dth_mat1/(distx1**2)
+north_equ_th_mat1=-Dth_mat1/(disty1**2)
+south_equ_th_mat1=-Dth_mat1/(disty1**2)
+up_equ_th_mat1=-Dth_mat1/(distz1**2)
+down_equ_th_mat1=-Dth_mat1/(distz1**2)
+
+#Thermal core material 2
+
+central_equ_th_mat2=2*Dth_mat2/(distx1**2) + 2*Dth_mat2/(disty1**2) + 2*Dth_mat2/(distz1**2) + SigmaAth_mat2
+east_equ_th_mat2=-Dth_mat2/(distx1**2)
+west_equ_th_mat2=-Dth_mat2/(distx1**2)
+north_equ_th_mat2=-Dth_mat2/(disty1**2)
+south_equ_th_mat2=-Dth_mat2/(disty1**2)
+up_equ_th_mat2=-Dth_mat2/(distz1**2)
+down_equ_th_mat2=-Dth_mat2/(distz1**2)
+
+#Thermal core material 3
+
+central_equ_th_mat3=2*Dth_mat3/(distx1**2) + 2*Dth_mat3/(disty1**2) + 2*Dth_mat3/(distz1**2) + SigmaAth_mat3
+east_equ_th_mat3=-Dth_mat3/(distx1**2)
+west_equ_th_mat3=-Dth_mat3/(distx1**2)
+north_equ_th_mat3=-Dth_mat3/(disty1**2)
+south_equ_th_mat3=-Dth_mat3/(disty1**2)
+up_equ_th_mat3=-Dth_mat3/(distz1**2)
+down_equ_th_mat3=-Dth_mat3/(distz1**2)
+
+#Thermal core material 4
+
+# central_equ_th_mat4=2*Dth_mat4/(distx1**2) + 2*Dth_mat4/(disty1**2) + 2*Dth_mat4/(distz1**2) + SigmaAth_mat4
+# east_equ_th_mat4=-Dth_mat4/(distx1**2)
+# west_equ_th_mat4=-Dth_mat4/(distx1**2)
+# north_equ_th_mat4=-Dth_mat4/(disty1**2)
+# south_equ_th_mat4=-Dth_mat4/(disty1**2)
+# up_equ_th_mat4=-Dth_mat4/(distz1**2)
+# down_equ_th_mat4=-Dth_mat4/(distz1**2)
 
 if nx2 > 0 and ny2 > 0 and nz2 > 0:  # Check if the reflector region exists
-    central_equ_thr=2*Dth2/(distx2**2) + 2*Dth2/(disty2**2) + 2*Dth2/(distz2**2) + SigmaAth2
-    east_equ_thr=-Dth2/(distx2**2)
-    west_equ_thr=-Dth2/(distx2**2)
-    north_equ_thr=-Dth2/(disty2**2)
-    south_equ_thr=-Dth2/(disty2**2)
-    up_equ_thr=-Dth2/(distz2**2)
-    down_equ_thr=-Dth2/(distz2**2)
+    central_equ_th_ref=2*Dth_ref/(distx2**2) + 2*Dth_ref/(disty2**2) + 2*Dth_ref/(distz2**2) + SigmaAth_ref
+    east_equ_th_ref=-Dth_ref/(distx2**2)
+    west_equ_th_ref=-Dth_ref/(distx2**2)
+    north_equ_th_ref=-Dth_ref/(disty2**2)
+    south_equ_th_ref=-Dth_ref/(disty2**2)
+    up_equ_th_ref=-Dth_ref/(distz2**2)
+    down_equ_th_ref=-Dth_ref/(distz2**2)
 else:
-    central_equ_thr= None
-    east_equ_thr= None
-    west_equ_thr= None
-    north_equ_thr= None
-    south_equ_thr= None
-    up_equ_thr= None
-    down_equ_thr= None
+    central_equ_th_ref= None
+    east_equ_th_ref= None
+    west_equ_th_ref= None
+    north_equ_th_ref= None
+    south_equ_th_ref= None
+    up_equ_th_ref= None
+    down_equ_th_ref= None
     
 #fill arrays based on 3d location
 for k in range(nz1 + 2 * nz2):
     for j in range(ny1 + 2 * ny2):
         for i in range(nx1 + 2 * nx2):
             if core_and_ref[i, j, k] == 1:
-                central_thc = np.append(central_thc, central_equ_thc)
+                central_thc = np.append(central_thc, central_equ_th_mat1)
             elif core_and_ref[i, j, k] == 2:
-                central_thc = np.append(central_thc, central_equ_thr)
+                central_thc = np.append(central_thc, central_equ_th_mat2)
+            elif core_and_ref[i, j, k] == 3:
+                central_thc = np.append(central_thc, central_equ_th_mat3)
+#            elif core_and_ref[i, j, k] == 4:
+#                central_thc = np.append(central_thc, central_equ_th_mat4)
+            elif core_and_ref[i, j, k] == 5:
+                central_thc = np.append(central_thc, central_equ_th_ref)
             
             if i == nx1 + 2 * nx2 - 1:  # End node in the x-direction
                 east_thc = np.append(east_thc, 0)
             else:
                 if core_and_ref[i+1, j, k] == 1:
-                    east_thc = np.append(east_thc, east_equ_thc)
+                    east_thc = np.append(east_thc, east_equ_th_mat1)
                 elif core_and_ref[i+1, j, k] == 2:
-                    east_thc = np.append(east_thc, east_equ_thr)
+                    east_thc = np.append(east_thc, east_equ_th_mat2)
+                elif core_and_ref[i+1, j, k] == 3:
+                    east_thc = np.append(east_thc, east_equ_th_mat3)
+#                elif core_and_ref[i+1, j, k] == 4:
+#                    east_thc = np.append(east_thc, east_equ_th_mat4)                    
+                elif core_and_ref[i+1, j, k] == 5:
+                    east_thc = np.append(east_thc, east_equ_th_ref)
             
             if i == 0:  # Start node in the x-direction
                 west_thc = np.append(west_thc, 0)
             else:
                 if core_and_ref[i - 1, j, k] == 1:
-                    west_thc = np.append(west_thc, west_equ_thc)
+                    west_thc = np.append(west_thc, west_equ_th_mat1)
                 elif core_and_ref[i - 1, j, k] == 2:
-                    west_thc = np.append(west_thc, west_equ_thr)
+                    west_thc = np.append(west_thc, west_equ_th_mat2)
+                elif core_and_ref[i - 1, j, k] == 3:
+                    west_thc = np.append(west_thc, west_equ_th_mat3)
+#                elif core_and_ref[i - 1, j, k] == 4:
+#                    west_thc = np.append(west_thc, west_equ_th_mat4)
+                elif core_and_ref[i - 1, j, k] == 5:
+                    west_thc = np.append(west_thc, west_equ_th_ref)
             
             if j == ny1 + 2 * ny2 - 1:  # End node in the y-direction
                 north_thc = np.append(north_thc, 0)
             else:
                 if core_and_ref[i, j+1, k] == 1:
-                    north_thc = np.append(north_thc, north_equ_thc)
+                    north_thc = np.append(north_thc, north_equ_th_mat1)
                 elif core_and_ref[i, j+1, k] == 2:
-                    north_thc = np.append(north_thc, north_equ_thr)
+                    north_thc = np.append(north_thc, north_equ_th_mat2)
+                elif core_and_ref[i, j+1, k] == 3:
+                    north_thc = np.append(north_thc, north_equ_th_mat3)
+#                elif core_and_ref[i, j+1, k] == 4:
+#                    north_thc = np.append(north_thc, north_equ_th_mat4)
+                elif core_and_ref[i, j+1, k] == 5:
+                    north_thc = np.append(north_thc, north_equ_th_ref)
             
             if j == 0:  # Start node in the y-direction
                 south_thc = np.append(south_thc, 0)
             else:
                 if core_and_ref[i, j - 1, k] == 1:
-                    south_thc = np.append(south_thc, south_equ_thc)
+                    south_thc = np.append(south_thc, south_equ_th_mat1)
                 elif core_and_ref[i, j - 1, k] == 2:
-                    south_thc = np.append(south_thc, south_equ_thr)
+                    south_thc = np.append(south_thc, south_equ_th_mat2)
+                elif core_and_ref[i, j - 1, k] == 3:
+                    south_thc = np.append(south_thc, south_equ_th_mat3)
+#                elif core_and_ref[i, j - 1, k] == 4:
+#                    south_thc = np.append(south_thc, south_equ_th_mat4)
+                elif core_and_ref[i, j - 1, k] == 5:
+                    south_thc = np.append(south_thc, south_equ_th_ref)
             
             if k == nz1 + 2 * nz2 - 1:  # End node in the z-direction
                 up_thc = np.append(up_thc, 0)
             else:
                 if core_and_ref[i, j, k+1] == 1:
-                    up_thc = np.append(up_thc, up_equ_thc)
+                    up_thc = np.append(up_thc, up_equ_th_mat1)
                 elif core_and_ref[i, j, k+1] == 2:
-                    up_thc = np.append(up_thc, up_equ_thr)
+                    up_thc = np.append(up_thc, up_equ_th_mat2)
+                elif core_and_ref[i, j, k+1] == 3:
+                    up_thc = np.append(up_thc, up_equ_th_mat3)
+#                elif core_and_ref[i, j, k+1] == 4:
+#                    up_thc = np.append(up_thc, up_equ_th_mat4)
+                elif core_and_ref[i, j, k+1] == 5:
+                    up_thc = np.append(up_thc, up_equ_th_ref)
             
             if k == 0:  # Start node in the z-direction
                 down_thc = np.append(down_thc, 0)
             else:
                 if core_and_ref[i, j, k - 1] == 1:
-                    down_thc = np.append(down_thc, down_equ_thc)
+                    down_thc = np.append(down_thc, down_equ_th_mat1)
                 elif core_and_ref[i, j, k - 1] == 2:
-                    down_thc = np.append(down_thc, down_equ_thr)
+                    down_thc = np.append(down_thc, down_equ_th_mat2)
+                elif core_and_ref[i, j, k - 1] == 3:
+                    down_thc = np.append(down_thc, down_equ_th_mat3)
+#                elif core_and_ref[i, j, k - 1] == 4:
+#                    down_thc = np.append(down_thc, down_equ_th_mat4)
+                elif core_and_ref[i, j, k - 1] == 5:
+                    down_thc = np.append(down_thc, down_equ_th_ref)
                 
 
 #%% Make Thermal Flux Arrays   
@@ -374,9 +545,15 @@ for k in range(nz1+2*nz2):
     for j in range(ny1+2*ny2):
         for i in range(nx1+2*nx2):
             if core_and_ref[i,j,k] == 1:                
-                fast_1_flux=np.append(fast_1_flux,nusigmaf1)
-            elif core_and_ref[i,j,k] == 2:
-                fast_1_flux=np.append(fast_1_flux,nusigmaf2)
+                fast_1_flux=np.append(fast_1_flux,nusigmaf_mat1)
+            elif core_and_ref[i,j,k] == 2:                
+                fast_1_flux=np.append(fast_1_flux,nusigmaf_mat2)
+            elif core_and_ref[i,j,k] == 3:                
+                fast_1_flux=np.append(fast_1_flux,nusigmaf_mat3)
+#            elif core_and_ref[i,j,k] == 4:                
+#                fast_1_flux=np.append(fast_1_flux,nusigmaf_mat4)
+            elif core_and_ref[i,j,k] == 5:
+                fast_1_flux=np.append(fast_1_flux,nusigmaf_ref)
 fast_flux1=np.diag(fast_1_flux)
 
 fast_2_flux=[]
@@ -384,9 +561,15 @@ for k in range(nz1+2*nz2):
     for j in range(ny1+2*ny2):
         for i in range(nx1+2*nx2):
             if core_and_ref[i,j,k] == 1:                
-                fast_2_flux=np.append(fast_2_flux,nusigmafth1)
-            elif core_and_ref[i,j,k] == 2:
-                fast_2_flux=np.append(fast_2_flux,nusigmafth2)
+                fast_2_flux=np.append(fast_2_flux,nusigmafth_mat1)
+            elif core_and_ref[i,j,k] == 2:                
+                fast_2_flux=np.append(fast_2_flux,nusigmafth_mat2)
+            elif core_and_ref[i,j,k] == 3:                
+                fast_2_flux=np.append(fast_2_flux,nusigmafth_mat3)
+#            elif core_and_ref[i,j,k] == 4:                
+#                fast_2_flux=np.append(fast_2_flux,nusigmafth_mat4)
+            elif core_and_ref[i,j,k] == 5:
+                fast_2_flux=np.append(fast_2_flux,nusigmafth_ref)
 fast_flux2=np.diag(fast_2_flux)
 
 thermal_flux=[]
@@ -394,9 +577,15 @@ for k in range(nz1+2*nz2):
     for j in range(ny1+2*ny2):
         for i in range(nx1+2*nx2):
             if core_and_ref[i,j,k] == 1:                
-                thermal_flux=np.append(thermal_flux,SigmaS12c)
-            elif core_and_ref[i,j,k] == 2:
-                thermal_flux=np.append(thermal_flux,SigmaS12r)
+                thermal_flux=np.append(thermal_flux,SigmaS12_mat1)
+            elif core_and_ref[i,j,k] == 2:                
+                thermal_flux=np.append(thermal_flux,SigmaS12_mat2)
+            elif core_and_ref[i,j,k] == 3:                
+                thermal_flux=np.append(thermal_flux,SigmaS12_mat3)
+#            elif core_and_ref[i,j,k] == 4:                
+#                thermal_flux=np.append(thermal_flux,SigmaS12_mat4)
+            elif core_and_ref[i,j,k] == 5:
+                thermal_flux=np.append(thermal_flux,SigmaS12_ref)
 Thermal_flux=np.diag(thermal_flux)
 
 plt.spy(fast_flux1)
@@ -440,7 +629,8 @@ while (flxdiff > 0.0001):
     flxdiff=np.sqrt(flxdiff1)+np.sqrt(flxdiff2)
    
 print('numerical keff',k)
-#plt.plot(flux1)
+plt.plot(flux1)
+plt.show()
 plt.plot(flux2)
 plt.show()
 
