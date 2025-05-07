@@ -18,10 +18,14 @@ Consider the two-group three-dimensional nuclear reactor core simulator you deve
     6. Develop the computational methodology assigned to your individual group (see below).
     7. Write a report, concise and to the point, and prepare a 20-minute presentation.  All members sign the report and assign a level of participation/contribution to the group based on a scale from 1 to 5, where 5 represents fully engaged and fully contributed, while 1 is the opposite.
 
-Super Group Mario: Groups 1 and 2: Develop the computational methodology to evaluate the response of your reactor model to changes in fuel and moderator temperature.  Establish a reasonable estimate for the temperature of the fuel and moderator (use projects 3b and 3c as the basis), generate appropriate cross sections, and compare results with temperature feedback to your base model which uses a constant average temperature for all nodes in the core.  Team leads: Cade and Lauren.
+Super Group Mario: Groups 1 and 2: Develop the computational methodology to evaluate the response of your reactor model to changes in fuel and moderator temperature. Establish a reasonable estimate for the temperature of the fuel and moderator (use projects 3b and 3c as the basis), generate appropriate cross sections, and compare results with temperature feedback to your base model which uses a constant average temperature for all nodes in the core.
 
 *Super Group Luigi: Groups 3 and 4: Develop the computational methodology to adjust the boron concentration (or control rod insertion) in your simulator to automatically achieve a critical reactor.*
 
+Extra Credit (10%): 
+    a. Develop the computational methodology to adjust the burnup in fuel assemblies and to deplete the reactor from BOC to EOC.
+    b. Automate the assignment of fuel properties to reduce power peaking or increase k-eff (or both). 
+    
 Link to overleaf report:
 https://www.overleaf.com/6458736911wsbbnbkrhrcb#bd38bd
 
