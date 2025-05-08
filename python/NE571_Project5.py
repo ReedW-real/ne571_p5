@@ -17,9 +17,9 @@ nx = 3: Number of nodes in the x direction
 ny = 3: Number of nodes in the y direction
 nz = 3: Number of nodes in the z direction
 """
-nx = 16
-ny = 16
-nz = 16
+nx = 11
+ny = 11
+nz = 11
 
 
 # Define materials
@@ -32,12 +32,37 @@ The materials are defined as follows:
 """
 zones = np.zeros((nx, ny, nz), dtype=int)
 zones[:, :, :] = 1
-zones[0:2, :, :] = 0
-zones[-2:, :, :] = 0
-zones[:, 0:2, :] = 0
-zones[:, -2:, :] = 0
-zones[:, :, 0:2] = 0
-zones[:, :, -2:] = 0
+
+# checker board pattern of med and low enriched fuel (constant in z, checkerboard in x-y)
+for i in range(1, nx-1):
+    for j in range(1, ny-1):
+        if (i+j) % 2 == 0:
+            zones[i, j, :] = 1
+        else:
+            zones[i, j, :] = 0
+
+# high enriched ring
+'''
+zones[1, :, :] = 2
+zones[-2, :, :] = 2
+zones[:, 1, :] = 2
+zones[:, -2, :] = 2
+zones[:, :, 1] = 2
+zones[:, :, -2] = 2
+'''
+
+
+# outer reflector
+zones[0, :, :] = 2
+zones[-1, :, :] = 2
+zones[:, 0, :] = 2
+zones[:, -1, :] = 2
+zones[:, :, 0] = 2
+zones[:, :, -1] = 2
+
+
+
+
 
 
 # Define widths
@@ -49,7 +74,7 @@ cell = [x, y, z]
 NOTE: The x, y, and z widths must sum to the same value in the other two dimensions across all cells.
 """
 dimensions = np.zeros((nx, ny, nz, 3), dtype=float)
-dimensions[:, :, :, :] = [3,3,3]
+dimensions[:, :, :, :] = [8.426,8.426,15.27]
 
 
 # Arbirary flags
@@ -88,7 +113,9 @@ The indexes of the properties are as follows:
 """
 
 # --- material properties ---
+WITHDRAWN = False
 
+'''
 # energy group 1: fast
 D_list_fast        = [1.13,   1.2627,   2.354]
 SigR_list_fast     = [0.0494, 0.02619,  0.1416]
@@ -100,6 +127,35 @@ D_list_thermal     = [0.16,   0.3543,    3.341]
 SigA_list_thermal  = [0.0197, 0.1210,    0.09984]
 NuSigF_list_thermal= [0.0,    0.18514,   0.2503392]
 Sig21_zero         = [0.0,    0.0,       0.0]
+'''
+
+# withdrawn: 2.35, 3.40, 4.45, ref
+if WITHDRAWN:
+    # energy group 1: fast
+    D_list_fast        = [1.43E+00, 1.44E+00, 1.44E+00, 1.40E+00]
+    SigR_list_fast     = [2.56E-02, 2.54E-02, 2.54E-02, 2.63E-02]
+    NuSigF_list_fast   = [5.64E-03, 6.97E-03, 8.21E-03, 5.87E-03]
+    Sig12_list_fast    = [1.68E-02, 1.59E-02, 1.53E-02, 1.77E-02]
+
+    # energy group 2: thermal
+    D_list_thermal     = [3.75E-01, 3.75E-01, 3.75E-01, 3.22E-01]
+    SigA_list_thermal  = [6.64E-02, 8.43E-02, 1.00E-01, 5.13E-02]
+    NuSigF_list_thermal= [1.06E-01, 1.45E-01, 1.79E-01, 7.20E-02]
+    Sig21_zero         = [0.00E+00, 0.00E+00, 0.00E+00, 0.00E+00]
+
+# not withdrawn: 2.35, 3.40, 4.45, ref
+elif not WITHDRAWN:
+    # energy group 1: fast
+    D_list_fast        = [1.38E+00, 1.39E+00, 1.39E+00, 1.40E+00]
+    SigR_list_fast     = [2.73E-02, 2.69E-02, 2.67E-02, 2.63E-02]
+    NuSigF_list_fast   = [5.55E-03, 6.87E-03, 8.09E-03, 5.87E-03]
+    Sig12_list_fast    = [1.46E-02, 1.38E-02, 1.31E-02, 1.77E-02]
+
+    # energy group 2: thermal
+    D_list_thermal     = [3.79E-01, 3.78E-01, 3.77E-01, 3.22E-01]
+    SigA_list_thermal  = [9.59E-02, 1.15E-01, 1.32E-01, 5.13E-02]
+    NuSigF_list_thermal= [1.07E-01, 1.46E-01, 1.82E-01, 7.20E-02]
+    Sig21_zero         = [0.00E+00, 0.00E+00, 0.00E+00, 0.00E+00]
 
 
 # pack into nested dict
@@ -426,9 +482,16 @@ slice_2d = zones[:, :, z_mid]
 
 # Custom color map: RGBA
 cmap = ListedColormap([
-    (0.7, 0.9, 1.0, 0.3),  # material 0: water (light blue, transparent)
-    (1.0, 0.5, 0.0, 1.0),  # material 1: fuel (orange)
-    (0.2, 0.2, 0.2, 1.0)   # material 2: control rod (dark grey)
+
+    # material 0: highly enriched fuel (yellow)
+    (1.0, 1.0, 0.0, 1.0),  # Yellow
+    # material 1: med enriched fuel (orange)
+    (1.0, 0.5, 0.0, 1.0),  # Orange
+    # material 2: low enriched fuel (red)
+    (1.0, 0.0, 0.0, 1.0),  # Red
+    # material 4: reflector (blue)
+    #(0.0, 0.0, 1.0, 0.3),  # Blue
+
 ])
 
 # Plot the slice
