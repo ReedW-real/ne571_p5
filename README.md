@@ -16,13 +16,12 @@ easier to model with fewer and shorter versions of typical LWR assemblies.
 numerical mesh in the x, y, and z directions.
     b. Generate various discrete sets of two-group homogenized cross sections for your fuel
 assemblies by using CASMO or SCALE/Polaris. Some examples are suggested below:
-        i. Enrichment variation (3% to 5% U-235). Consider HALEU at <20% U-235.
-       ii. MOX fuel (various combinations of U-235 and Pu-239)
-       iii. Burnup variation (0 to 45 GWD/MT)
-       iv. Lattices with and without control rods
-       v. Lattices with burnable absorbers
-       vi. Develop Cross-Sectional Data for the reflector region on the outer part surrounding
-       the core.
+            i. Enrichment variation (3% to 5% U-235). Consider HALEU at <20% U-235.
+            ii. MOX fuel (various combinations of U-235 and Pu-239)
+            iii. Burnup variation (0 to 45 GWD/MT)
+            iv. Lattices with and without control rods
+            v. Lattices with burnable absorbers
+            vi. Develop Cross-Sectional Data for the reflector region on the outer part surrounding the core.
 
 5. Use your cross section sets from Item 2.b. to create a core design by creating an
 alternating/checkerboard arrangement of fresh, once/twice burnt, rodded/unrodded, and/or MOX fuel
