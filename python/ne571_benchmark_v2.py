@@ -11,10 +11,33 @@ import warnings, time, sys, os
 warnings.filterwarnings("ignore")
 ##################################################################
 
+def spell_IM(nx, ny, nz):
+    zones = np.zeros((nx, ny, nz), dtype=int)
+    midz = int(nz//2)
+    # I
+    zones[2,2:5,midz]=1
+    zones[3,3,midz]=1
+    zones[4,3,midz]=1
+    zones[5,2:5,midz]=1
+    
+    # G
+    zones[2:6,8,midz]=1
+    zones[2,8:11,midz]=1
+    zones[5,8:11,midz]=1
+    zones[4,10,midz]=1
+    
+    # M
+    zones[7:11,4,midz]=1
+    zones[7:11,6,midz]=1
+    zones[7:11,8,midz]=1
+    zones[7,4:9,midz]=1
+    
+    return zones
+    
+    
 def checker(nx, ny, nz):
     """ checker pattern with enriched ring and reflector """
-    zones = np.zeros((nx, ny, nz), dtype=int)
-    zones[:, :, :] = 1
+    zones = np.ones((nx, ny, nz), dtype=int)
 
     # checker board pattern of med and low enriched fuel (constant in z, checkerboard in x-y)
     for i in range(2, nx-2):
@@ -42,7 +65,7 @@ def solid_3p35(nx, ny, nz):
     return np.ones((nx, ny, nz), dtype=int)  
 
 
-def solid_3p35(nx, ny, nz):
+def solid_4p45(nx, ny, nz):
     """ core of just 4p45 enriched fuel """
     zones = 1 + np.ones((nx, ny, nz), dtype=int)  
     
@@ -70,12 +93,10 @@ def widths(nx, ny, nz, shape="tetragonal", WITHDRAWN=False):
     """
     dimensions = np.zeros((nx, ny, nz, 3), dtype=float)
     
-    dimensions[:, :, :, :] = [8.426, 8.426, 15.27]  if shape == "tetragonal" else dimensions # tetragonal a=b!=c
-    dimensions[:, :, :, :] = [8.426, 8.426, 8.426]  if shape == "cubic" else dimensions # cubic a=b=c
+    dimensions[:, :, :] = [8.426, 8.426, 15.27]  if shape == "tetragonal" else dimensions # tetragonal a=b!=c
+    dimensions[:, :, :] = [8.426, 8.426, 8.426]  if shape == "cubic" else dimensions # cubic a=b=c
     
     if not os.path.exists("plots"): os.makedirs("plots")
-    print("Size of node counts: ", sys.getsizeof(dimensions), " bytes\nSize of widths tensor: ", sys.getsizeof(zones), " bytes")
-    
     
     if WITHDRAWN:
         """ withdrawn: 2.35, 3.40, 4.45, ref """
@@ -114,9 +135,9 @@ def widths(nx, ny, nz, shape="tetragonal", WITHDRAWN=False):
     return dimensions, material_properties
 
 
-def idx(i, j, k, nx, ny):
-    """ 3-D to 1-D index mapping """
-    return i + nx * (j + ny * k)
+def idx(i, j, k, nx, ny, nz):
+    """ 3-D to 1-D index mapping using np.ravel_multi_index """
+    return np.ravel_multi_index((i, j, k), (nx, ny, nz))
 
 
 def coe1(D, d_):
@@ -194,7 +215,7 @@ def builder(nx, ny, nz, dimensions, zones):
             for iz in range(nz):
 
                 # --- global index ---
-                i = idx(ix, iy, iz, nx, ny)
+                i = idx(ix, iy, iz, nx, ny, nz)
 
                 # --- local cell widths ---
                 dx, dy, dz = dimensions[ix, iy, iz, 0:3]
@@ -213,10 +234,10 @@ def builder(nx, ny, nz, dimensions, zones):
                     A_thermal_center += coe1(D_thermal, dx)
                 # left face
                 else:
-                    D_fast_x, D_thermal_x = get_props(zones[ix-1, iy, iz])[:2]               
+                    D_fast_x, D_thermal_x = get_props(zones[ix-1, iy, iz])[:2]                    
                     dx_x = dimensions[ix-1, iy, iz, 0]
-                    i_x = idx(ix-1, iy, iz, nx, ny)
-                   
+                    i_x = idx(ix-1, iy, iz, nx, ny, nz)
+                    
                     A_fast_center += coe1(D_fast, dx)
                     A_thermal_center += coe1(D_thermal, dx)
                     A_fast[i, i_x] = -coe1(D_fast, dx)
@@ -228,9 +249,9 @@ def builder(nx, ny, nz, dimensions, zones):
                     A_thermal_center += coe1(D_thermal, dx)
                 # right face
                 else:
-                    D_fast_x, D_thermal_x = get_props(zones[ix+1, iy, iz])[:2]               
+                    D_fast_x, D_thermal_x = get_props(zones[ix+1, iy, iz])[:2]                    
                     dx_x = dimensions[ix+1, iy, iz, 0]
-                    i_x = idx(ix+1, iy, iz, nx, ny)
+                    i_x = idx(ix+1, iy, iz, nx, ny, nz)
 
                     A_fast_center += coe1(D_fast, dx)
                     A_thermal_center += coe1(D_thermal, dx)
@@ -244,9 +265,9 @@ def builder(nx, ny, nz, dimensions, zones):
                     A_thermal_center += coe1(D_thermal, dy)
                 # back face
                 else:
-                    D_fast_y, D_thermal_y = get_props(zones[ix, iy-1, iz])[:2]               
-                    dy_y = dimensions[ix, iy-1, iz, 1]  
-                    i_y = idx(ix, iy-1, iz, nx, ny)
+                    D_fast_y, D_thermal_y = get_props(zones[ix, iy-1, iz])[:2]                    
+                    dy_y = dimensions[ix, iy-1, iz, 1]                  
+                    i_y = idx(ix, iy-1, iz, nx, ny, nz)
 
                     A_fast_center += coe1(D_fast, dy)
                     A_thermal_center += coe1(D_thermal, dy)
@@ -259,9 +280,9 @@ def builder(nx, ny, nz, dimensions, zones):
                     A_thermal_center += coe1(D_thermal, dy)
                 # front face
                 else:
-                    D_fast_y, D_thermal_y = get_props(zones[ix, iy+1, iz])[:2]               
-                    dy_y = dimensions[ix, iy+1, iz, 1]  
-                    i_y = idx(ix, iy+1, iz, nx, ny)
+                    D_fast_y, D_thermal_y = get_props(zones[ix, iy+1, iz])[:2]                    
+                    dy_y = dimensions[ix, iy+1, iz, 1]                  
+                    i_y = idx(ix, iy+1, iz, nx, ny, nz)
 
                     A_fast_center += coe1(D_fast, dy)
                     A_thermal_center += coe1(D_thermal, dy)
@@ -275,9 +296,9 @@ def builder(nx, ny, nz, dimensions, zones):
                     A_thermal_center += coe1(D_thermal, dz)
                 # up face
                 else:
-                    D_fast_z, D_thermal_z = get_props(zones[ix, iy, iz-1])[:2]               
-                    dz_z = dimensions[ix, iy, iz-1, 2]  
-                    i_z = idx(ix, iy, iz-1, nx, ny)
+                    D_fast_z, D_thermal_z = get_props(zones[ix, iy, iz-1])[:2]                    
+                    dz_z = dimensions[ix, iy, iz-1, 2]                  
+                    i_z = idx(ix, iy, iz-1, nx, ny, nz)
 
                     A_fast_center += coe1(D_fast, dz)
                     A_thermal_center += coe1(D_thermal, dz)
@@ -290,9 +311,9 @@ def builder(nx, ny, nz, dimensions, zones):
                     A_thermal_center += coe1(D_thermal, dz)
                 # down face
                 else:
-                    D_fast_z, D_thermal_z = get_props(zones[ix, iy, iz+1])[:2]               
-                    dz_z = dimensions[ix, iy, iz+1, 2]  
-                    i_z = idx(ix, iy, iz+1, nx, ny)
+                    D_fast_z, D_thermal_z = get_props(zones[ix, iy, iz+1])[:2]                    
+                    dz_z = dimensions[ix, iy, iz+1, 2]                  
+                    i_z = idx(ix, iy, iz+1, nx, ny, nz)
 
                     A_fast_center += coe1(D_fast, dz)
                     A_thermal_center += coe1(D_thermal, dz)
@@ -315,7 +336,7 @@ def builder(nx, ny, nz, dimensions, zones):
 def power_iteration_k(zones):
     """ power iteration for two‐group k‐eigenvalue """
     phi1 = np.ones(nx*ny*nz)    # fast flux guess
-    phi2 = np.copy(phi1)        # thermal flux guess
+    phi2 = np.ones_like(phi1)        # thermal flux guess
     k    = 1.0                  # initial k guess
     tol  = 1e-5                 # convergence tolerance 
     diff = 1e9                  # assigns diff variable
@@ -360,98 +381,106 @@ def power_iteration_k(zones):
     return phi1, phi2, k
 
 
-def visualize_k(phi1, phi2, k):
+def visualize(phi1, phi2, nx, ny, nz):
     """
-    reshape to 3D and visualize central slice
+    reshape to 3D and visualize central slice with individual colorbars initially
     """
-    phi1_3d = phi1.reshape((nx, ny, nz))
-    phi2_3d = phi2.reshape((nx, ny, nz))
-    mx = nx // 2  # Middle index for x
-    my = ny // 2  # Middle index for y
-    mz = nz // 2  # Middle index for z
-    
-    # Create figure with subplots
-    fig, axs = plt.subplots(3, 1, figsize=(10, 12))
-    
+    # Reshape fluxes for visualization
+    phi1_3d = np.zeros((nx, ny, nz))
+    phi2_3d = np.zeros((nx, ny, nz))
+
+    for i in range(nx):
+        for j in range(ny):
+            for k in range(nz):
+                idx = np.ravel_multi_index((i, j, k), (nx, ny, nz))
+                phi1_3d[i, j, k] = phi1[idx]
+                phi2_3d[i, j, k] = phi2[idx]
+
+    mx = int(nx // 2)  # Middle index for x
+    my = int(ny // 2)  # Middle index for y
+    mz = int(nz // 2)  # Middle index for z
+
+    # Create figure with subplots for profiles
+    fig_profiles, axs_profiles = plt.subplots(3, 1, figsize=(10, 12))
+
     # X direction plot
-    axs[0].plot(range(nx), phi1_3d[:, my, mz], 'b-', label='Fast Flux')
-    axs[0].plot(range(nx), phi2_3d[:, my, mz], 'r-', label='Thermal Flux')
-    axs[0].set_xlabel('X Position')
-    axs[0].set_ylabel('Flux Magnitude')
-    axs[0].set_title(f'Flux Along X at Y=Z={mz}')
-    axs[0].legend()
-    axs[0].grid(True)
-    
+    axs_profiles[0].plot(range(nx), phi1_3d[:, my, mz], 'b-', label='Fast Flux')
+    axs_profiles[0].plot(range(nx), phi2_3d[:, my, mz], 'r-', label='Thermal Flux')
+    axs_profiles[0].set_xlabel('X Position')
+    axs_profiles[0].set_ylabel('Flux Magnitude')
+    axs_profiles[0].set_title(f'Flux Along X')
+    axs_profiles[0].legend()
+    axs_profiles[0].grid(True)
+
     # Y direction plot
-    axs[1].plot(range(ny), phi1_3d[mx, :, mz], 'b-', label='Fast Flux')
-    axs[1].plot(range(ny), phi2_3d[mx, :, mz], 'r-', label='Thermal Flux')
-    axs[1].set_xlabel('Y Position')
-    axs[1].set_ylabel('Flux Magnitude')
-    axs[1].set_title(f'Flux Along Y at X=Z={mz}')
-    axs[1].legend()
-    axs[1].grid(True)
-    
+    axs_profiles[1].plot(range(ny), phi1_3d[mx, :, mz], 'b-', label='Fast Flux')
+    axs_profiles[1].plot(range(ny), phi2_3d[mx, :, mz], 'r-', label='Thermal Flux')
+    axs_profiles[1].set_xlabel('Y Position')
+    axs_profiles[1].set_ylabel('Flux Magnitude')
+    axs_profiles[1].set_title(f'Flux Along Y')
+    axs_profiles[1].legend()
+    axs_profiles[1].grid(True)
+
     # Z direction plot
-    axs[2].plot(range(nz), phi1_3d[mx, my, :], 'b-', label='Fast Flux')
-    axs[2].plot(range(nz), phi2_3d[mx, my, :], 'r-', label='Thermal Flux')
-    axs[2].set_xlabel('Z Position')
-    axs[2].set_ylabel('Flux Magnitude')
-    axs[2].set_title(f'Flux Along Z at X=Y={my}')
-    axs[2].legend()
-    axs[2].grid(True)
-    
+    axs_profiles[2].plot(range(nz), phi1_3d[mx, my, :], 'b-', label='Fast Flux')
+    axs_profiles[2].plot(range(nz), phi2_3d[mx, my, :], 'r-', label='Thermal Flux')
+    axs_profiles[2].set_xlabel('Z Position')
+    axs_profiles[2].set_ylabel('Flux Magnitude')
+    axs_profiles[2].set_title(f'Flux Along Z')
+    axs_profiles[2].legend()
+    axs_profiles[2].grid(True)
+
+    plt.tight_layout()
     plt.savefig('plots/flux_profiles.png')
-    
-    # Create 2D contour plots of the middle slices
-    fig, axs = plt.subplots(2, 3, figsize=(15, 10))
-    
+
+    # Create 2D contour plots of the middle slices with individual colorbars
+    fig_contours, axs_contours = plt.subplots(2, 3, figsize=(15, 10))
+
     # Fast flux - XY plane
-    im1 = axs[0, 0].imshow(phi1_3d[:, :, mz].T, cmap='jet', origin='lower')
-    axs[0, 0].set_title('Fast Flux - XY Plane (Z=middle)')
-    axs[0, 0].set_xlabel('X Position')
-    axs[0, 0].set_ylabel('Y Position')
-    plt.colorbar(im1, ax=axs[0, 0])  
+    im1 = axs_contours[0, 0].imshow(phi1_3d[:, :, mz].T, cmap='jet', origin='lower')
+    axs_contours[0, 0].set_title('Fast Flux - XY Plane (Z=middle)')
+    axs_contours[0, 0].set_xlabel('X Position')
+    axs_contours[0, 0].set_ylabel('Y Position')
+    fig_contours.colorbar(im1, ax=axs_contours[0, 0], label='Flux Magnitude')
 
     # Fast flux - XZ plane
-    im2 = axs[0, 1].imshow(phi1_3d[:, my, :].T, cmap='jet', origin='lower')
-    axs[0, 1].set_title('Fast Flux - XZ Plane (Y=middle)')
-    axs[0, 1].set_xlabel('X Position')
-    axs[0, 1].set_ylabel('Z Position')
-    plt.colorbar(im2, ax=axs[0, 1]) 
+    im2 = axs_contours[0, 1].imshow(phi1_3d[:, my, :].T, cmap='jet', origin='lower')
+    axs_contours[0, 1].set_title('Fast Flux - XZ Plane (Y=middle)')
+    axs_contours[0, 1].set_xlabel('X Position')
+    axs_contours[0, 1].set_ylabel('Z Position')
+    fig_contours.colorbar(im2, ax=axs_contours[0, 1], label='Flux Magnitude')
 
     # Fast flux - YZ plane
-    im3 = axs[0, 2].imshow(phi1_3d[mx, :, :].T, cmap='jet', origin='lower')
-    axs[0, 2].set_title('Fast Flux - YZ Plane (X=middle)')
-    axs[0, 2].set_xlabel('Y Position')
-    axs[0, 2].set_ylabel('Z Position')
-    plt.colorbar(im3, ax=axs[0, 2]) 
+    im3 = axs_contours[0, 2].imshow(phi1_3d[mx, :, :].T, cmap='jet', origin='lower')
+    axs_contours[0, 2].set_title('Fast Flux - YZ Plane (X=middle)')
+    axs_contours[0, 2].set_xlabel('Y Position')
+    axs_contours[0, 2].set_ylabel('Z Position')
+    fig_contours.colorbar(im3, ax=axs_contours[0, 2], label='Flux Magnitude')
 
     # Thermal flux - XY plane
-    im4 = axs[1, 0].imshow(phi2_3d[:, :, mz].T, cmap='jet', origin='lower')
-    axs[1, 0].set_title('Thermal Flux - XY Plane (Z=middle)')
-    axs[1, 0].set_xlabel('X Position')
-    axs[1, 0].set_ylabel('Y Position')
-    plt.colorbar(im4, ax=axs[1, 0]) 
+    im4 = axs_contours[1, 0].imshow(phi2_3d[:, :, mz].T, cmap='jet', origin='lower')
+    axs_contours[1, 0].set_title('Thermal Flux - XY Plane (Z=middle)')
+    axs_contours[1, 0].set_xlabel('X Position')
+    axs_contours[1, 0].set_ylabel('Y Position')
+    fig_contours.colorbar(im4, ax=axs_contours[1, 0], label='Flux Magnitude')
 
     # Thermal flux - XZ plane
-    im5 = axs[1, 1].imshow(phi2_3d[:, my, :].T, cmap='jet', origin='lower')
-    axs[1, 1].set_title('Thermal Flux - XZ Plane (Y=middle)')
-    axs[1, 1].set_xlabel('X Position')
-    axs[1, 1].set_ylabel('Z Position')
-    plt.colorbar(im5, ax=axs[1, 1]) 
+    im5 = axs_contours[1, 1].imshow(phi2_3d[:, my, :].T, cmap='jet', origin='lower')
+    axs_contours[1, 1].set_title('Thermal Flux - XZ Plane (Y=middle)')
+    axs_contours[1, 1].set_xlabel('X Position')
+    axs_contours[1, 1].set_ylabel('Z Position')
+    fig_contours.colorbar(im5, ax=axs_contours[1, 1], label='Flux Magnitude')
 
     # Thermal flux - YZ plane
-    im6 = axs[1, 2].imshow(phi2_3d[mx, :, :].T, cmap='jet', origin='lower')
-    axs[1, 2].set_title('Thermal Flux - YZ Plane (X=middle)')
-    axs[1, 2].set_xlabel('Y Position')
-    axs[1, 2].set_ylabel('Z Position')
-    plt.colorbar(im6, ax=axs[1, 2])  
-    
+    im6 = axs_contours[1, 2].imshow(phi2_3d[mx, :, :].T, cmap='jet', origin='lower')
+    axs_contours[1, 2].set_title('Thermal Flux - YZ Plane (X=middle)')
+    axs_contours[1, 2].set_xlabel('Y Position')
+    axs_contours[1, 2].set_ylabel('Z Position')
+    fig_contours.colorbar(im6, ax=axs_contours[1, 2], label='Flux Magnitude')
+
+    plt.tight_layout()
     plt.savefig('plots/flux_contours.png')
-    
-    # Display k-effectivez
-    print(f"Final k-effective: {k:.6f}")
-    
+
     return None
 
 
@@ -465,13 +494,13 @@ def visualize_materials(zones):
     # Get the dimensions of the zones array
     nx, ny, nz = zones.shape
 
-    mid_x = nx // 2
-    mid_y = ny // 2
-    mid_z = nz // 2
+    mid_x = int(nx // 2)  # Middle index for x
+    mid_y = int(ny // 2)  # Middle index for y
+    mid_z = int(nz // 2)  # Middle index for z
     
-    x_midplane_slice = zones[mid_x, :, :]
-    y_midplane_slice = zones[:, mid_y, :]
-    z_midplane_slice = zones[:, :, mid_z]
+    YZ = zones[mid_x, :, :]
+    XZ = zones[:, mid_y, :]
+    XY = zones[:, :, mid_z]
 
     # Define a custom color map.  Matplotlib colormaps are defined
     # as a list of tuples, where each tuple is (r, g, b).
@@ -485,23 +514,23 @@ def visualize_materials(zones):
 
     # X MIDPLANE 
     plt.figure(figsize=(8, 8), layout='constrained') 
-    plt.imshow(x_midplane_slice, cmap=cmap)  
+    plt.imshow(YZ.T, cmap=cmap)  
     plt.colorbar(ticks=np.arange(4), label='Material ID')
-    plt.xlabel('Z-axis'), plt.ylabel('Y-axis')
+    plt.ylabel('Z-axis'), plt.xlabel('Y-axis')
     plt.title('Material Distribution at X Midplane')
     
     # Y MIDPLANE
     plt.figure(figsize=(8, 8), layout='constrained')  
-    plt.imshow(y_midplane_slice, cmap=cmap) 
+    plt.imshow(XZ.T, cmap=cmap) 
     plt.colorbar(ticks=np.arange(4), label='Material ID')
-    plt.xlabel('Z-axis'), plt.ylabel('X-axis')
+    plt.ylabel('Z-axis'), plt.xlabel('X-axis')
     plt.title('Material Distribution at Y Midplane')
     
     # Z MIDPLANE
     plt.figure(figsize=(8, 8), layout='constrained')  
-    plt.imshow(z_midplane_slice, cmap=cmap)  
+    plt.imshow(XY.T, cmap=cmap)  
     plt.colorbar(ticks=np.arange(4), label='Material ID')  
-    plt.xlabel('Y-axis'), plt.ylabel('X-axis')
+    plt.ylabel('Y-axis'), plt.xlabel('X-axis')
     plt.title('Material Distribution at Z Midplane')
     
     return None
@@ -529,7 +558,7 @@ if __name__ == "__main__":
     ## zones
     
     " bare 2.25 w/o enriched u235 unreflected "
-    zones = solid_2p25(*nodes)
+    #zones = solid_2p25(*nodes)
     
     " bare 3.35 w/o enriched u235 unreflected "
     #zones = solid_3p35(*nodes)
@@ -537,19 +566,25 @@ if __name__ == "__main__":
     " bare 4.45 w/o enriched u235 unreflected "
     #zones = solid_4p45(*nodes)
     
+    " reflected 4.45 w/o enriched u235 unreflected "
+    #zones = add_reflector(solid_4p45(*nodes))
+    
     " bare reflector "
     #zones = just_ref(*nodes)
     
     " reactor no coolant "
-    #zones = add_reflector(checker(*nodes))
+    zones = add_reflector(checker(*nodes))
+    
+    "Ivan Maldonado"
+    #zones = spell_IM(*nodes)
     
     ## dimensions
     
     " for tetragonal shape "
-    #dimensions, material_properties = widths(*nodes) 
+    dimensions, material_properties = widths(*nodes) 
     
     " for cubic shape "
-    dimensions, material_properties = widths(*nodes, shape="cubic") 
+    #dimensions, material_properties = widths(*nodes, shape="cubic") 
     
     ## run
     
@@ -560,7 +595,7 @@ if __name__ == "__main__":
     phi1, phi2, k = power_iteration_k(zones)
     
     " visualize power iteration output"
-    visualize_k(phi1, phi2, k)
+    visualize(phi1, phi2, nx=nx, ny=ny, nz=nz)
     
     ## plot
     
