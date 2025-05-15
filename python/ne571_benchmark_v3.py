@@ -58,6 +58,54 @@ def checker(nx, ny, nz):
     zones[:, :, 1], zones[:, :, -2] = 2, 2
     
     return zones
+    
+
+def circular(nx, ny, nz):
+    """
+    Creates a circular fuel pattern with:
+    - Central circular region with checker pattern (0 = low enriched, 1 = medium enriched)
+    - High enriched ring (material 2)
+    - Reflector (material 3) at the boundaries
+    
+    Parameters:
+    -----------
+    nx, ny, nz : int
+        Number of cells in x, y, z directions
+    
+    Returns:
+    --------
+    zones : numpy.ndarray
+        3D array with material zone identifiers
+    """
+    # Initialize with reflector (material 3)
+    zones = np.ones((nx, ny, nz), dtype=int) * 3
+    
+    # Calculate center of the grid
+    center_x, center_y = (nx-1)/2, (ny-1)/2
+    
+    # Define the radius of the core and the ring
+    core_radius = min(nx, ny) * 0.35  
+    ring_radius = min(nx, ny) * 0.45  
+    
+    # Create the pattern
+    for i in range(nx):
+        for j in range(ny):
+            # Calculate distance from center
+            distance = np.sqrt((i - center_x)**2 + (j - center_y)**2)
+            
+            # Inside the core (checker pattern)
+            if distance < core_radius:
+                if (i+j) % 2 == 0:
+                    zones[i, j, :] = 1  # Medium enriched
+                else:
+                    zones[i, j, :] = 0  # Low enriched
+            
+            # In the enriched ring
+            elif distance < ring_radius:
+                zones[i, j, :] = 2  # High enriched
+    
+    zones[:,:,0], zones[:,:,-1] = 3, 3
+    return zones
 
 
 def solid_2p25(nx, ny, nz):
@@ -572,7 +620,7 @@ if __name__ == "__main__":
     #zones = solid_3p35(*nodes)
     
     " bare 4.45 w/o enriched u235 unreflected "
-    zones = solid_4p45(*nodes)
+    #zones = solid_4p45(*nodes)
     
     " reflected 4.45 w/o enriched u235 unreflected "
     #zones = add_reflector(solid_4p45(*nodes))
@@ -586,13 +634,16 @@ if __name__ == "__main__":
     "Ivan Maldonado"
     #zones = spell_IM(*nodes)
     
+    "circular"
+    zones = circular(*nodes)
+   
     ## dimensions
     
     " for tetragonal shape "
-    #dimensions, material_properties, small_v = widths(*nodes) 
+    dimensions, material_properties, small_v = widths(*nodes) 
     
     " for cubic shape "
-    dimensions, material_properties, small_v = widths(*nodes, shape="cubic") 
+    #dimensions, material_properties, small_v = widths(*nodes, shape="cubic") 
     
     ## run
     
@@ -609,10 +660,6 @@ if __name__ == "__main__":
     
     " show everything all at once @ end "
     plt.show()
-       
-    
-    
-
     
 
 ##################################################################
