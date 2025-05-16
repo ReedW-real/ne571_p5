@@ -461,6 +461,8 @@ def visualize(phi1, phi2, nx, ny, nz):
     # Create figure with subplots for profiles
     fig_profiles, axs_profiles = plt.subplots(3, 1, figsize=(10, 12), layout='constrained')
 
+    print(f"peaking: {np.max(phi1_3d[:,ny//2,nz//2])/np.mean(phi1_3d[:,ny//2,nz//2])}")
+
     # X direction plot
     axs_profiles[0].plot(range(nx), phi1_3d[:, my, mz], 'b-', label='Fast Flux')
     axs_profiles[0].plot(range(nx), phi2_3d[:, my, mz], 'r--', label='Thermal Flux')

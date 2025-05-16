@@ -74,7 +74,7 @@ cell = [x, y, z]
 NOTE: The x, y, and z widths must sum to the same value in the other two dimensions across all cells.
 """
 dimensions = np.zeros((nx, ny, nz, 3), dtype=float)
-dimensions[:, :, :, :] = [8.426,8.426,15.27]
+dimensions[:, :, :, :] = [7.129,7.129,12.921]
 
 
 # Arbirary flags
